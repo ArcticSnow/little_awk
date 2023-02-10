@@ -9,7 +9,7 @@ mamba create -n "awky" python=3.7 ipython
 conda activate awky
 conda install -c conda-forge pdal python-pdal gdal
 conda install xarray matplotlib pandas numpy scipy pyyaml rasterio dask
-pip install plyfile geopandas laspy
+pip install laspy
 
 git clone https://github.com/ArcticSnow/OpenPyLivox
 git checkout laspyV2
