@@ -4,7 +4,7 @@ Package for processing time-lapse lidar, and etract snowpack stratigraphy
 ## Installation
 Steps to create a Python environemnt valid to work with Little_awk library
 
-'''
+```
 mamba create -n "awky" python=3.7 ipython
 conda activate awky
 conda install -c conda-forge libgdal
@@ -16,7 +16,7 @@ pip install laspy==1.7
 
 git clone https://github.com/ArcticSnow/OpenPyLivox
 pip install -e OpenPyLivox
-'''
+```
 
 **Valid on Ubuntu 20.04**
 
