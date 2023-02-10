@@ -49,7 +49,7 @@ def convert_bin_to_las(project_dir='/home/data',
         return
 
     for file in file_list:
-        opl.convertBin2LAS(file, deleteBin=deleteBin)
+        opl.convertBin2LAZ(file, deleteBin=deleteBin)
         if os.path.isfile(file + '.laz'):
             os.rename(file + '.laz', project_dir + os.sep + las_folder + os.sep + file.split('/')[-1][:-4] + '.laz')
     return
