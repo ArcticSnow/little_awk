@@ -15,6 +15,7 @@ pip install laspy==1.7
 
 
 git clone https://github.com/ArcticSnow/OpenPyLivox
+git checkout laspyV2
 pip install -e OpenPyLivox
 ```
 
