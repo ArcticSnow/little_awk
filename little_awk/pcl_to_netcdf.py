@@ -50,8 +50,8 @@ def convert_bin_to_las(project_dir='/home/data',
 
     for file in file_list:
         opl.convertBin2LAS(file, deleteBin=deleteBin)
-        if os.path.isfile(file + '.las'):
-            os.rename(file + '.las', project_dir + os.sep + las_folder + os.sep + file.split('/')[-1][:-4] + '.las')
+        if os.path.isfile(file + '.laz'):
+            os.rename(file + '.laz', project_dir + os.sep + las_folder + os.sep + file.split('/')[-1][:-4] + '.laz')
     return
 
 
@@ -61,7 +61,7 @@ def rotate_crop_filter_pcl(z_range=[-6, 1],
                            project_dir='to/my/proj',
                            las_raw_folder='las_raw',
                            las_clean_folder='las_clean',
-                           file_pattern='*.las'):
+                           file_pattern='*.laz'):
     '''
     Functino to rotate the point clouds, removes points with intensity below 20 and crops to the studied area
     Args:
@@ -103,7 +103,8 @@ def rotate_crop_filter_pcl(z_range=[-6, 1],
                         # write to new file
                         {
                             "type": "writers.las",
-                            "filename": project_dir + os.sep + las_clean_folder + os.sep + file.split('/')[-1]
+                            "filename": project_dir + os.sep + las_clean_folder + os.sep + file.split('/')[-1],
+                            "compression": "laszip"
                         }
                     ]
             }
@@ -116,7 +117,7 @@ def rotate_crop_filter_pcl(z_range=[-6, 1],
 def las_to_tif(resolution= 0.1,
                bounds='([-20,0],[-4.5,4.5])',
                project_dir='to/project',
-               file_pattern='*.las'):
+               file_pattern='*.laz'):
     '''
     Function to extract geotiff from point clouds
 
@@ -257,13 +258,13 @@ if __name__ == '__main__':
                            z_range=conf['pcl_to_netcdf']['Z_range'],
                            crop_extent=conf['pcl_to_netcdf']['XY_extent'],
                            rotation=conf['pcl_to_netcdf']['rotation'],
-                           file_pattern='*.las'
+                           file_pattern='*.laz'
                            )
 
     las_to_tif(project_dir=args.project_dir,
                resolution= conf['pcl_to_netcdf']['resolution'],
                bounds=conf['pcl_to_netcdf']['XY_extent'],
-               file_pattern='*.las')
+               file_pattern='*.laz')
 
     tif_to_netcdf(project_dir=args.project_dir,
                   file_pattern='*.tif',
