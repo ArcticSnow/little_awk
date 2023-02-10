@@ -7,12 +7,9 @@ Steps to create a Python environemnt valid to work with Little_awk library
 ```
 mamba create -n "awky" python=3.7 ipython
 conda activate awky
-conda install -c conda-forge libgdal
-conda install -c conda-forge gdal
-conda install -c conda-forge pdal python-pdal
-pip install xarray matplotlib pandas numpy scipy plyfile geopandas pyyaml rasterio dask
-pip install laspy==1.7
-
+conda install -c conda-forge pdal python-pdal gdal
+conda install xarray matplotlib pandas numpy scipy pyyaml rasterio dask
+pip install plyfile geopandas laspy
 
 git clone https://github.com/ArcticSnow/OpenPyLivox
 git checkout laspyV2
