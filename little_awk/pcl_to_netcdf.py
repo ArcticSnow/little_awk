@@ -5,6 +5,7 @@ Modified by Gaspard and Lucas, March 2022
 Modified S. Filhol, June 2022
 
 TODO:
+- [x] modify code to allow multiprocessing
 - add functionality to delete .las and tif file once converted.
 - add metadata field in netcdf file
 - possibility to speed up this process parallelizing the file processing on multiple core with
@@ -21,6 +22,14 @@ import pdal
 from tqdm import tqdm
 import xarray as xr
 import openpylivox as opl
+from multiprocessing import Pool
+
+
+def execute_pip_json(file, pip_filter_json):
+    pipeline = pdal.Pipeline(pip_filter_json)
+    pipeline.execute()
+    print("file : " + file.split(os.sep)[-1] + " processed")
+
 
 def make_directory(project_dir='/home/data'):
     os.mkdir(project_dir + os.sep + 'bin')
@@ -29,12 +38,12 @@ def make_directory(project_dir='/home/data'):
     os.mkdir(project_dir + os.sep + 'TIFs')
     os.mkdir(project_dir + os.sep + 'netcdfs')
 
-def convert_bin_to_las(project_dir='/home/data',
+def convert_bin_to_laz(project_dir='/home/data',
                        bin_folder='bin',
                        file_pattern='*.bin',
                        las_folder='las_raw',
-                       output_path='./',
-                       deleteBin = False):
+                       deleteBin = False,
+                       num_proc=4):
     """
     Function to convert a list of Livox binary files from .bin to .las
     Args:
@@ -48,8 +57,12 @@ def convert_bin_to_las(project_dir='/home/data',
         print('WARNING: No file found')
         return
 
+    pool = Pool(num_proc)
+    pool.starmap(opl.convertBin2LAZ, zip(file_list, [deleteBin]*len(file_list)))
+    pool.close()
+    pool.join()
+
     for file in file_list:
-        opl.convertBin2LAZ(file, deleteBin=deleteBin)
         if os.path.isfile(file + '.laz'):
             os.rename(file + '.laz', project_dir + os.sep + las_folder + os.sep + file.split('/')[-1][:-4] + '.laz')
     return
@@ -61,9 +74,10 @@ def rotate_crop_filter_pcl(z_range=[-6, 1],
                            project_dir='to/my/proj',
                            las_raw_folder='las_raw',
                            las_clean_folder='las_clean',
-                           file_pattern='*.laz'):
+                           file_pattern='*.laz',
+                           num_proc=4):
     '''
-    Functino to rotate the point clouds, removes points with intensity below 20 and crops to the studied area
+    Function to rotate the point clouds, removes points with intensity below 20 and crops to the studied area
     Args:
         z_range: range to crop along the Z-axis [zmin, zmax]
         crop_extent: extent to crop pcl ([xmin, xmax],[ymin, ymax])
@@ -79,7 +93,8 @@ def rotate_crop_filter_pcl(z_range=[-6, 1],
     file_list = [os.path.normpath(i) for i in file_list]
     file_list.sort()
 
-    for file in tqdm(file_list):
+    pip_jsons = []
+    for file in file_list:
         pip_filter_json = json.dumps(
             {
                 "pipeline":
@@ -109,15 +124,19 @@ def rotate_crop_filter_pcl(z_range=[-6, 1],
                     ]
             }
         )
-        pipeline = pdal.Pipeline(pip_filter_json)
-        pipeline.execute()
-        print("file : " + file.split(os.sep)[-1] + " processed")
+        pip_jsons.append(pip_filter_json)
+
+    pool = Pool(num_proc)
+    pool.starmap(execute_pip_json, zip(file_list, pip_jsons))
+    pool.close()
+    pool.join()
 
 
-def las_to_tif(resolution= 0.1,
+def laz_to_tif(resolution=0.1,
                bounds='([-20,0],[-4.5,4.5])',
                project_dir='to/project',
-               file_pattern='*.laz'):
+               file_pattern='*.laz',
+               num_proc=4):
     '''
     Function to extract geotiff from point clouds
 
@@ -135,9 +154,10 @@ def las_to_tif(resolution= 0.1,
     file_list = [os.path.normpath(i) for i in file_list]
     file_list.sort()
 
-    for file in tqdm(file_list):
+    pip_jsons = []
+    for file in file_list:
         # Extract timestamp from filename
-        tst_data = pd.to_datetime(file.split(os.sep)[-1][:-4], format="%Y.%m.%dT%H-%M-%S")
+        #tst_data = pd.to_datetime(file.split(os.sep)[-1][:-4], format="%Y.%m.%dT%H-%M-%S")
         #if (tst_data.second + 60*tst_data.minute + 3600*tst_data.hour) % sampling_interval == 0:
 
         # Compute DEM with PDAL
@@ -157,8 +177,12 @@ def las_to_tif(resolution= 0.1,
                     ]
             }
         )
-        pipeline = pdal.Pipeline(pip_filter_json)
-        pipeline.execute()
+        pip_jsons.append(pip_filter_json)
+
+    pool = Pool(num_proc)
+    pool.starmap(execute_pip_json, zip(file_list, pip_jsons))
+    pool.close()
+    pool.join()
 
 
 def tif_to_netcdf(project_dir='to/my/project',
@@ -258,13 +282,15 @@ if __name__ == '__main__':
                            z_range=conf['pcl_to_netcdf']['Z_range'],
                            crop_extent=conf['pcl_to_netcdf']['XY_extent'],
                            rotation=conf['pcl_to_netcdf']['rotation'],
-                           file_pattern='*.laz'
+                           file_pattern='*.laz',
+                           num_proc=conf['pcl_to_netcdf']['n_processor']
                            )
 
-    las_to_tif(project_dir=args.project_dir,
+    laz_to_tif(project_dir=args.project_dir,
                resolution= conf['pcl_to_netcdf']['resolution'],
                bounds=conf['pcl_to_netcdf']['XY_extent'],
-               file_pattern='*.laz')
+               file_pattern='*.laz',
+               num_proc=conf['pcl_to_netcdf']['n_processor'])
 
     tif_to_netcdf(project_dir=args.project_dir,
                   file_pattern='*.tif',

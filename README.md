@@ -7,7 +7,7 @@ Steps to create a Python environemnt valid to work with Little_awk library
 ```
 mamba create -n "awky" python=3.7 ipython
 conda activate awky
-conda install -c conda-forge pdal python-pdal gdal
+conda install -c conda-forge pdal python-pdal gdal laszip
 conda install xarray matplotlib pandas numpy scipy pyyaml rasterio dask h5netcdf
 pip install laspy[lazrs,laszip]
 
@@ -20,6 +20,7 @@ pip install -e OpenPyLivox
 
 
 **TODO**:
+- [ ] _convertBin2LAZ() in openpylivox: use pooling to spread load on multiple cores.
 - [ ] Implement new snow detection algorithm
 - [ ] Figure out compaction/temperature model
   - use existing model tool such as snowpack.f from snowmodel or a simplified version of Crocus
